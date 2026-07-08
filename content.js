@@ -4,7 +4,7 @@
   function getConversationId() {
     const match = window.location.pathname.match(/\/c\/([a-zA-Z0-9-]+)/);
     if (!match) {
-      throw new Error('未在一个具体的 ChatGPT 对话页面上（URL 里没有 /c/<id>）');
+      throw new Error('Not on a specific ChatGPT conversation page (no /c/<id> in the URL)');
     }
     return match[1];
   }
@@ -12,11 +12,11 @@
   async function getAccessToken() {
     const response = await fetch('/api/auth/session', { credentials: 'include' });
     if (!response.ok) {
-      throw new Error(`无法读取登录状态 (HTTP ${response.status})`);
+      throw new Error(`Could not read login status (HTTP ${response.status})`);
     }
     const data = await response.json();
     if (!data.accessToken) {
-      throw new Error('未登录 ChatGPT，或会话已过期');
+      throw new Error('Not logged into ChatGPT, or the session has expired');
     }
     return data.accessToken;
   }
@@ -27,7 +27,7 @@
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     if (!response.ok) {
-      throw new Error(`无法读取对话内容 (HTTP ${response.status})`);
+      throw new Error(`Could not read the conversation (HTTP ${response.status})`);
     }
     return response.json();
   }
@@ -35,7 +35,7 @@
   function scrapeDomFallback() {
     const nodes = document.querySelectorAll('[data-message-author-role]');
     if (nodes.length === 0) {
-      throw new Error('页面上没有找到任何对话内容');
+      throw new Error('No conversation content found on the page');
     }
     const messages = [];
     for (const node of nodes) {
@@ -65,7 +65,7 @@
       const conversationJson = await fetchConversationJson(id, accessToken);
       const messages = extractMessages(conversationJson);
       if (messages.length === 0) {
-        throw new Error('对话为空');
+        throw new Error('Conversation is empty');
       }
       return {
         title: conversationTitle(conversationJson),
@@ -75,7 +75,7 @@
     } catch (apiError) {
       const messages = scrapeDomFallback();
       if (messages.length === 0) {
-        throw new Error('对话为空');
+        throw new Error('Conversation is empty');
       }
       return {
         title: conversationTitle(null),

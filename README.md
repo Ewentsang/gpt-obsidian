@@ -1,5 +1,7 @@
 # ChatGPT → Obsidian Inbox
 
+[中文](README.zh-CN.md)
+
 A lightweight Chrome extension that captures your ChatGPT conversations straight into your Obsidian vault — no copy-pasting, no manual formatting.
 
 Click the extension icon while viewing any ChatGPT conversation, and it pulls the full conversation, cleans it up, and drops it into your vault's `inbox/` folder as a properly formatted markdown file with YAML frontmatter (title, source URL, capture date, and an `inbox` tag) — ready for whatever archiving or review workflow you already use.
@@ -24,20 +26,20 @@ Click the extension icon while viewing any ChatGPT conversation, and it pulls th
 
 ## Setup (one-time)
 
-1. In Chrome, go to `chrome://extensions`, enable **Developer mode**, click **"加载已解压的扩展程序"** (Load unpacked), and select this project's directory.
+1. In Chrome, go to `chrome://extensions`, enable **Developer mode**, click **"Load unpacked"**, and select this project's directory.
 2. In Obsidian, install and enable the community plugin **Local REST API**.
 3. In the plugin settings, enable **"Enable Non-encrypted (HTTP) Server"** (binds to `http://127.0.0.1:27123`). This avoids dealing with the plugin's self-signed HTTPS certificate since traffic never leaves this machine.
 4. Copy the generated **API key** from the plugin settings.
-5. Right-click the extension's toolbar icon and choose **"选项"** (or open it from the extension's card on `chrome://extensions`), paste the API key, and save.
+5. Right-click the extension's toolbar icon and choose **"Options"** (or open it from the extension's card on `chrome://extensions`), paste the API key, and save.
 
 ## Usage
 
 1. Open a conversation on `chatgpt.com` or `chat.openai.com` (the URL should look like `.../c/<some-id>`).
 2. Click the extension's toolbar icon.
-3. Click **"存入 Obsidian inbox"**.
+3. Click **"Save to Obsidian Inbox"**.
 4. The popup shows the conversation title, then a success message once the file is saved to your vault's `inbox/` folder.
 
-If you see an error, the popup message tells you what's wrong (Obsidian unreachable, invalid API key, or the current tab isn't a ChatGPT conversation) — the "打开设置" button appears when the fix involves the API key.
+If you see an error, the popup message tells you what's wrong (Obsidian unreachable, invalid API key, or the current tab isn't a ChatGPT conversation) — the "Open Settings" button appears when the fix involves the API key.
 
 ## Development
 

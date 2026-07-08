@@ -14,14 +14,14 @@ openOptionsButton.addEventListener('click', () => {
 
 captureButton.addEventListener('click', async () => {
   captureButton.disabled = true;
-  setStatus('正在读取对话…', '');
+  setStatus('Reading conversation…', '');
   previewEl.textContent = '';
   openOptionsButton.style.display = 'none';
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab || !tab.id) {
-      throw new Error('找不到当前标签页');
+      throw new Error('Could not find the active tab');
     }
 
     let extractResponse;
@@ -30,27 +30,27 @@ captureButton.addEventListener('click', async () => {
         type: 'EXTRACT_CONVERSATION'
       });
     } catch (sendError) {
-      throw new Error('读取对话失败，请确认当前页面是 ChatGPT 对话');
+      throw new Error('Failed to read the conversation — make sure this tab is a ChatGPT conversation');
     }
     if (!extractResponse || !extractResponse.ok) {
       throw new Error(
         (extractResponse && extractResponse.error) ||
-          '读取对话失败，请确认当前页面是 ChatGPT 对话'
+          'Failed to read the conversation — make sure this tab is a ChatGPT conversation'
       );
     }
 
-    previewEl.textContent = `标题：${extractResponse.result.title}`;
-    setStatus('正在存入 Obsidian…', '');
+    previewEl.textContent = `Title: ${extractResponse.result.title}`;
+    setStatus('Saving to Obsidian…', '');
 
     const saveResponse = await chrome.runtime.sendMessage({
       type: 'SAVE_TO_INBOX',
       payload: extractResponse.result
     });
     if (!saveResponse || !saveResponse.ok) {
-      throw new Error((saveResponse && saveResponse.error) || '存入失败');
+      throw new Error((saveResponse && saveResponse.error) || 'Save failed');
     }
 
-    setStatus(`已存入 inbox/${saveResponse.result.filename}`, 'success');
+    setStatus(`Saved to inbox/${saveResponse.result.filename}`, 'success');
   } catch (error) {
     setStatus(error.message, 'error');
     openOptionsButton.style.display = error.message.includes('API key') ? 'block' : 'none';

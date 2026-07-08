@@ -6,13 +6,13 @@ async function listInboxFilenames(apiKey) {
   try {
     response = await fetch(url, options);
   } catch (networkError) {
-    throw new Error('无法连接 Obsidian，请确认 Local REST API 插件已开启');
+    throw new Error('Could not connect to Obsidian — make sure the Local REST API plugin is running');
   }
   if (response.status === 401) {
-    throw new Error('API key 无效，请到设置页检查');
+    throw new Error('Invalid API key — check it on the settings page');
   }
   if (!response.ok) {
-    throw new Error('无法连接 Obsidian，请确认 Local REST API 插件已开启');
+    throw new Error('Could not connect to Obsidian — make sure the Local REST API plugin is running');
   }
   const data = await response.json();
   return data.files || [];
@@ -28,20 +28,20 @@ async function writeToInbox(apiKey, filename, content) {
   try {
     response = await fetch(url, options);
   } catch (networkError) {
-    throw new Error('无法连接 Obsidian，请确认 Local REST API 插件已开启');
+    throw new Error('Could not connect to Obsidian — make sure the Local REST API plugin is running');
   }
   if (response.status === 401) {
-    throw new Error('API key 无效，请到设置页检查');
+    throw new Error('Invalid API key — check it on the settings page');
   }
   if (!response.ok) {
-    throw new Error('无法连接 Obsidian，请确认 Local REST API 插件已开启');
+    throw new Error('Could not connect to Obsidian — make sure the Local REST API plugin is running');
   }
 }
 
 async function saveConversationToInbox({ title, source, transcript }) {
   const { localRestApiKey: apiKey } = await chrome.storage.local.get('localRestApiKey');
   if (!apiKey) {
-    throw new Error('尚未设置 Local REST API key，请先打开插件设置页填写');
+    throw new Error('No Local REST API key set — open the extension settings page and add one first');
   }
 
   const { buildBaseName, dedupeFilename } = self.ChatGPTObsidianFilename;

@@ -11,7 +11,7 @@ async function loadApiKey() {
 
 saveButton.addEventListener('click', async () => {
   await chrome.storage.local.set({ localRestApiKey: apiKeyInput.value.trim() });
-  statusEl.textContent = '已保存';
+  statusEl.textContent = 'Saved';
   setTimeout(() => {
     statusEl.textContent = '';
   }, 2000);

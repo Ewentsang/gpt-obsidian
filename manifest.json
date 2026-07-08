@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ChatGPT → Obsidian Inbox",
   "version": "0.1.0",
-  "description": "手动把当前 ChatGPT 对话存入 Obsidian vault 的 inbox/",
+  "description": "Manually save the current ChatGPT conversation into your Obsidian vault's inbox/",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
