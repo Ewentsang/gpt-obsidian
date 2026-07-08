@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --accent: #7c3aed;
+        --accent-hover: #6d28d9;
+        --accent-active: #5b21b6;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; }
+      html { background: #fafafa; }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        width: 280px;
+        padding: 16px;
+        background: #fafafa;
+      }
+      button {
+        width: 100%;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+      }
+      #capture {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        background: var(--accent);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+      }
+      #capture:hover:not(:disabled) { background: var(--accent-hover); }
+      #capture:active:not(:disabled) { background: var(--accent-active); transform: translateY(1px); }
+      #capture:disabled { background: #c4b5fd; cursor: default; }
+      #capture .icon { font-size: 15px; line-height: 1; }
+      #preview {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #555;
+        word-break: break-word;
+      }
+      #status {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.4;
+        white-space: pre-wrap;
+      }
+      #status.error { color: #b00020; }
+      #status.success { color: #1b7a1b; }
+      #openOptions {
+        margin-top: 8px;
+        padding: 7px 10px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--accent);
+        background: #f1e9ff;
+      }
+      #openOptions:hover { background: #e6d9ff; }
+    </style>
+  </head>
+  <body>
+    <button id="capture"><span class="icon">📥</span><span>存入 Obsidian inbox</span></button>
+    <div id="preview"></div>
+    <div id="status"></div>
+    <button id="openOptions" style="display:none;">打开设置</button>
+    <script src="popup.js"></script>
+  </body>
+</html>
