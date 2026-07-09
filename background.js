@@ -59,7 +59,7 @@ async function listEntries(conn, folder) {
   const { url, options } = Api.buildListRequest(baseUrl, conn.apiKey, folder);
   let response;
   try {
-    response = await fetch(url, options);
+    response = await fetchWithTimeout(url, options, 8000);
   } catch (e) {
     throw unreachable(conn.label);
   }
@@ -158,7 +158,7 @@ async function handleSave(payload) {
   const write = Api.buildWriteRequest(baseUrl, conn.apiKey, targetFolder, filename, content);
   let response;
   try {
-    response = await fetch(write.url, write.options);
+    response = await fetchWithTimeout(write.url, write.options, 8000);
   } catch (e) {
     throw unreachable(conn.label);
   }
