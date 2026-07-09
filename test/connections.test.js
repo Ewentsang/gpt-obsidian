@@ -21,6 +21,13 @@ test('migrateLegacy defaults the legacy folder to inbox when absent', () => {
   assert.equal(state.connections[0].lastFolder, 'inbox');
 });
 
+test('migrateLegacy treats an empty legacy key as no connection', () => {
+  assert.deepEqual(
+    C.migrateLegacy({ localRestApiKey: '', targetFolder: 'x' }),
+    { connections: [], activeConnectionId: null }
+  );
+});
+
 test('migrateLegacy passes through the new shape unchanged', () => {
   const raw = { connections: [{ id: 'c2', label: 'X', port: 27124, apiKey: 'k', lastFolder: '' }], activeConnectionId: 'c2' };
   assert.deepEqual(C.migrateLegacy(raw), raw);

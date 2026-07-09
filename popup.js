@@ -168,6 +168,7 @@ async function init() {
 }
 
 openOptionsButton.addEventListener('click', () => chrome.runtime.openOptionsPage());
+document.getElementById('openOptionsMain').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
 captureButton.addEventListener('click', async () => {
   captureButton.disabled = true;

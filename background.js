@@ -85,6 +85,9 @@ async function handleListConnections() {
 
 async function handleSetActive(connectionId) {
   const state = await loadState();
+  if (!Conn.getById(state, connectionId)) {
+    throw new Error('Unknown vault connection');
+  }
   await saveState(Conn.setActive(state, connectionId));
   return { activeConnectionId: connectionId };
 }

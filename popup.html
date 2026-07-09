@@ -40,7 +40,7 @@
       #status.error { color: #b00020; }
       #status.success { color: #1b7a1b; }
       #empty { font-size: 13px; color: #444; line-height: 1.5; }
-      #openOptions { width: 100%; margin-top: 8px; border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 500; color: var(--accent); background: #f1e9ff; cursor: pointer; }
+      #openOptions, #openOptionsMain { width: 100%; margin-top: 8px; border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 500; color: var(--accent); background: #f1e9ff; cursor: pointer; }
       .hidden { display: none; }
     </style>
   </head>
@@ -65,6 +65,7 @@
       <button id="capture" class="primary">📥 Save here</button>
       <div id="preview"></div>
       <div id="status"></div>
+      <button id="openOptionsMain">Open Settings</button>
     </div>
 
     <div id="empty" class="hidden">
