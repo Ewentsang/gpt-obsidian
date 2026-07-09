@@ -88,7 +88,13 @@ function render() {
       info.textContent = 'Testing…';
       const port = parseInt(portInput.value, 10);
       const apiKey = keyInput.value.trim();
-      const res = await chrome.runtime.sendMessage({ type: 'VERIFY_CONNECTION', port, apiKey });
+      let res;
+      try {
+        res = await chrome.runtime.sendMessage({ type: 'VERIFY_CONNECTION', port, apiKey });
+      } catch (e) {
+        info.textContent = 'Test failed: ' + e.message;
+        return;
+      }
       if (!res || !res.ok) { info.textContent = (res && res.error) || 'Test failed'; return; }
       if (!res.result.authenticated) { info.textContent = 'Reached the server, but the API key was rejected.'; return; }
       info.textContent = res.result.sampleFolders.length
@@ -129,7 +135,13 @@ document.getElementById('add').addEventListener('click', async () => {
 
 document.getElementById('detect').addEventListener('click', async () => {
   detectResult.textContent = 'Scanning ports 27123–27133…';
-  const res = await chrome.runtime.sendMessage({ type: 'DETECT_VAULTS' });
+  let res;
+  try {
+    res = await chrome.runtime.sendMessage({ type: 'DETECT_VAULTS' });
+  } catch (e) {
+    detectResult.textContent = 'Detection failed: ' + e.message;
+    return;
+  }
   if (!res || !res.ok) { detectResult.textContent = 'Detection failed'; return; }
   const live = res.result.ports;
   if (!live.length) {
