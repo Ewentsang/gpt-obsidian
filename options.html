@@ -3,32 +3,51 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      body { font-family: system-ui, sans-serif; padding: 16px; max-width: 480px; }
-      label { display: block; margin-bottom: 6px; font-weight: 600; }
-      input { width: 100%; padding: 6px; box-sizing: border-box; }
-      .field { margin-bottom: 16px; }
-      .help { margin: 6px 0 0; font-size: 12px; color: #666; }
+      body { font-family: system-ui, sans-serif; padding: 16px; max-width: 640px; }
+      h2 { margin: 0 0 4px; }
+      .help { font-size: 13px; color: #555; line-height: 1.5; }
       code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
-      button { margin-top: 4px; padding: 6px 14px; cursor: pointer; }
-      #status { margin-top: 8px; font-size: 13px; color: #1b7a1b; }
+      button { padding: 6px 12px; cursor: pointer; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      th, td { text-align: left; padding: 6px 6px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; }
+      input[type="text"], input[type="password"], input[type="number"] { width: 100%; padding: 5px; box-sizing: border-box; }
+      .addrow { display: grid; grid-template-columns: 1fr 100px 1fr auto; gap: 8px; margin-top: 8px; align-items: center; }
+      .muted { color: #666; font-size: 12px; }
+      #detectResult { margin-top: 8px; }
+      #status { margin-top: 10px; font-size: 13px; color: #1b7a1b; min-height: 16px; }
     </style>
   </head>
   <body>
-    <div class="field">
-      <label for="apiKey">Obsidian Local REST API key</label>
-      <input id="apiKey" type="password" autocomplete="off" />
+    <h2>Obsidian vault connections</h2>
+    <p class="help">
+      Each Obsidian vault runs its own Local REST API server on its own port with its own API key.
+      Add one connection per vault. Vaults you keep open at the same time must each use a
+      <strong>different port</strong> — set it in that vault's Local REST API plugin settings, with
+      <em>Enable Non-encrypted (HTTP) Server</em> turned on. Give each connection a label so you can
+      tell them apart (the API can't report the vault's name).
+    </p>
+
+    <button id="detect">Detect running vaults</button>
+    <div id="detectResult" class="muted"></div>
+
+    <table>
+      <thead>
+        <tr><th>Default</th><th>Label</th><th>Port</th><th>API key</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+
+    <h3>Add a connection</h3>
+    <div class="addrow">
+      <input id="addLabel" type="text" placeholder="Label, e.g. Work" />
+      <input id="addPort" type="number" placeholder="27123" />
+      <input id="addKey" type="password" placeholder="API key" autocomplete="off" />
+      <button id="add">Add</button>
     </div>
-    <div class="field">
-      <label for="folder">Default folder</label>
-      <input id="folder" type="text" placeholder="inbox" autocomplete="off" spellcheck="false" />
-      <p class="help">
-        Where conversations are saved by default. Leave empty to save to the
-        vault root, or use a subfolder path like <code>notes/ChatGPT</code>.
-        You can also change this per-save from the popup.
-      </p>
-    </div>
-    <button id="save">Save</button>
+
     <div id="status"></div>
+
+    <script src="lib/connections.js"></script>
     <script src="options.js"></script>
   </body>
 </html>
