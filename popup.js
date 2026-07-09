@@ -2,10 +2,41 @@ const captureButton = document.getElementById('capture');
 const statusEl = document.getElementById('status');
 const previewEl = document.getElementById('preview');
 const openOptionsButton = document.getElementById('openOptions');
+const folderInput = document.getElementById('folder');
+const folderSuggestions = document.getElementById('folderSuggestions');
+
+const DEFAULT_FOLDER = 'inbox';
 
 function setStatus(text, kind) {
   statusEl.textContent = text;
   statusEl.className = kind || '';
+}
+
+// Pre-fill the folder with whatever the user last chose (defaulting to
+// `inbox` on first run) so a plain click just works.
+async function loadSavedFolder() {
+  const { targetFolder } = await chrome.storage.local.get('targetFolder');
+  folderInput.value = targetFolder === undefined ? DEFAULT_FOLDER : targetFolder;
+}
+
+// Populate the autocomplete list with the vault's real folders. Best-effort:
+// if the key is missing or Obsidian is unreachable, the field still accepts
+// any free-text path.
+async function loadFolderSuggestions() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: 'LIST_FOLDERS' });
+    if (!response || !response.ok || !response.result.folders.length) {
+      return;
+    }
+    folderSuggestions.innerHTML = '';
+    for (const folder of response.result.folders) {
+      const option = document.createElement('option');
+      option.value = folder;
+      folderSuggestions.appendChild(option);
+    }
+  } catch (error) {
+    // Ignore — suggestions are a convenience, not a requirement.
+  }
 }
 
 openOptionsButton.addEventListener('click', () => {
@@ -57,13 +88,17 @@ captureButton.addEventListener('click', async () => {
 
     const saveResponse = await chrome.runtime.sendMessage({
       type: 'SAVE_TO_INBOX',
-      payload: extractResponse.result
+      payload: { ...extractResponse.result, folder: folderInput.value }
     });
     if (!saveResponse || !saveResponse.ok) {
       throw new Error((saveResponse && saveResponse.error) || 'Save failed');
     }
 
-    setStatus(`Saved to inbox/${saveResponse.result.filename}`, 'success');
+    const { folder, filename } = saveResponse.result;
+    // Reflect the normalized folder the background actually saved into.
+    folderInput.value = folder;
+    const savedPath = folder ? `${folder}/${filename}` : filename;
+    setStatus(`Saved to ${savedPath}`, 'success');
   } catch (error) {
     setStatus(error.message, 'error');
     openOptionsButton.style.display = error.message.includes('API key') ? 'block' : 'none';
@@ -71,3 +106,6 @@ captureButton.addEventListener('click', async () => {
     captureButton.disabled = false;
   }
 });
+
+loadSavedFolder();
+loadFolderSuggestions();

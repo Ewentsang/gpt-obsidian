@@ -17,6 +17,32 @@
         padding: 16px;
         background: #fafafa;
       }
+      label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #444;
+      }
+      #folder {
+        width: 100%;
+        padding: 7px 9px;
+        margin-bottom: 10px;
+        border: 1px solid #d4d4d8;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+      }
+      #folder:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+      }
+      .hint {
+        margin: -6px 0 10px;
+        font-size: 11px;
+        color: #888;
+      }
       button {
         width: 100%;
         border: none;
@@ -67,7 +93,18 @@
     </style>
   </head>
   <body>
-    <button id="capture"><span class="icon">📥</span><span>Save to Obsidian Inbox</span></button>
+    <label for="folder">Save to folder</label>
+    <input
+      id="folder"
+      type="text"
+      list="folderSuggestions"
+      placeholder="e.g. inbox — leave empty for vault root"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <datalist id="folderSuggestions"></datalist>
+    <p class="hint">Subfolders like <code>notes/ChatGPT</code> work too.</p>
+    <button id="capture"><span class="icon">📥</span><span>Save to Obsidian</span></button>
     <div id="preview"></div>
     <div id="status"></div>
     <button id="openOptions" style="display:none;">Open Settings</button>

@@ -6,13 +6,27 @@
       body { font-family: system-ui, sans-serif; padding: 16px; max-width: 480px; }
       label { display: block; margin-bottom: 6px; font-weight: 600; }
       input { width: 100%; padding: 6px; box-sizing: border-box; }
-      button { margin-top: 10px; padding: 6px 14px; cursor: pointer; }
+      .field { margin-bottom: 16px; }
+      .help { margin: 6px 0 0; font-size: 12px; color: #666; }
+      code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
+      button { margin-top: 4px; padding: 6px 14px; cursor: pointer; }
       #status { margin-top: 8px; font-size: 13px; color: #1b7a1b; }
     </style>
   </head>
   <body>
-    <label for="apiKey">Obsidian Local REST API key</label>
-    <input id="apiKey" type="password" autocomplete="off" />
+    <div class="field">
+      <label for="apiKey">Obsidian Local REST API key</label>
+      <input id="apiKey" type="password" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="folder">Default folder</label>
+      <input id="folder" type="text" placeholder="inbox" autocomplete="off" spellcheck="false" />
+      <p class="help">
+        Where conversations are saved by default. Leave empty to save to the
+        vault root, or use a subfolder path like <code>notes/ChatGPT</code>.
+        You can also change this per-save from the popup.
+      </p>
+    </div>
     <button id="save">Save</button>
     <div id="status"></div>
     <script src="options.js"></script>
