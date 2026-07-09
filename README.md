@@ -4,7 +4,7 @@
 
 A lightweight Chrome extension that captures your ChatGPT conversations straight into your Obsidian vault — no copy-pasting, no manual formatting.
 
-Click the extension icon while viewing any ChatGPT conversation, and it pulls the full conversation, cleans it up, and drops it into the vault folder of your choice as a properly formatted markdown file with YAML frontmatter (title, source URL, capture date, and an `inbox` tag) — ready for whatever archiving or review workflow you already use. The destination folder is yours to pick (it defaults to `inbox/`), and you can change it per save right from the popup.
+Click the extension icon while viewing any ChatGPT conversation, and it pulls the full conversation, cleans it up, and drops it into the vault and folder you pick — browse your vault's real folders in the popup (or make a new subfolder), and switch between multiple vaults from a dropdown. Files are saved as properly formatted markdown with YAML frontmatter (title, source URL, capture date, and an `inbox` tag).
 
 **Design philosophy:** this tool only captures and cleans. It never summarizes, rewrites, or interprets your conversations — that judgment call is left to you (or your own downstream workflow). What you see in ChatGPT is what lands in your vault, faithfully preserved, including code blocks and formatting.
 
@@ -13,11 +13,9 @@ Click the extension icon while viewing any ChatGPT conversation, and it pulls th
 ## Features
 
 - One-click manual capture — you decide what's worth saving
-- Choose any destination folder — pick from your vault's real folders (autocomplete), type any path (nested paths like `notes/ChatGPT` work), or leave it empty to save to the vault root; your choice is remembered
+- Multiple vaults — add one connection per vault (auto-detected by port) and switch between them in the popup
+- Browse to your destination — click through your vault's real folders, or create a new subfolder on the spot; no path typing
 - Filenames prefixed with the capture date (`YYYY-MM-DD Title.md`), sortable in your vault's file explorer
-- Automatic, collision-safe file naming (adds `-2`, `-3`, etc. if a title repeats)
-- Clean error messages if Obsidian isn't reachable or the API key is wrong
-- Zero external dependencies, zero build step — just load it and go
 
 ## Requirements
 
@@ -31,17 +29,15 @@ Click the extension icon while viewing any ChatGPT conversation, and it pulls th
 2. In Obsidian, install and enable the community plugin **Local REST API**.
 3. In the plugin settings, enable **"Enable Non-encrypted (HTTP) Server"** (binds to `http://127.0.0.1:27123`). This avoids dealing with the plugin's self-signed HTTPS certificate since traffic never leaves this machine.
 4. Copy the generated **API key** from the plugin settings.
-5. Right-click the extension's toolbar icon and choose **"Options"** (or open it from the extension's card on `chrome://extensions`), paste the API key, and save. Optionally set a **default folder** here (defaults to `inbox`).
+5. Right-click the extension's toolbar icon and choose **"Options"**. Click **Detect running vaults** to find the port(s) your open vaults are serving, then for each vault paste its API key and give it a label (e.g. "Work", "Personal"). If you keep several vaults open at once, give each a different HTTP port in its Local REST API settings first.
 
 ## Usage
 
 1. Open a conversation on `chatgpt.com` or `chat.openai.com` (the URL should look like `.../c/<some-id>`).
 2. Click the extension's toolbar icon.
-3. Optionally adjust the **Save to folder** field (pre-filled with your last choice; autocompletes your vault's folders; leave empty for the vault root).
-4. Click **"Save to Obsidian"**.
-5. The popup shows the conversation title, then a success message naming the exact path the file was saved to. The folder you used is remembered as the new default.
-
-If you see an error, the popup message tells you what's wrong (Obsidian unreachable, invalid API key, or the current tab isn't a ChatGPT conversation) — the "Open Settings" button appears when the fix involves the API key.
+3. Pick the **Vault** from the dropdown (the dot shows whether it's reachable).
+4. Browse to the destination folder, or type a name under **New subfolder here…** to create one.
+5. Click **"Save here"**. The popup shows the conversation title, then a success message naming the vault and exact path the file was saved to.
 
 ## Development
 
