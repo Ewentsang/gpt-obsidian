@@ -88,11 +88,16 @@ async function loadFolder() {
   renderHere();
   const conn = activeConnection();
   if (!conn) return;
-  const res = await chrome.runtime.sendMessage({
-    type: 'LIST_SUBFOLDERS',
-    connectionId: conn.id,
-    folder: path.join('/')
-  });
+  let res;
+  try {
+    res = await chrome.runtime.sendMessage({
+      type: 'LIST_SUBFOLDERS',
+      connectionId: conn.id,
+      folder: path.join('/')
+    });
+  } catch (e) {
+    res = null;
+  }
   if (!res || !res.ok) {
     setDot('bad', 'unreachable');
     setStatus(res && res.error ? res.error : 'Could not list folders', 'error');
@@ -116,7 +121,12 @@ function selectVault(id) {
 }
 
 async function init() {
-  const res = await chrome.runtime.sendMessage({ type: 'LIST_CONNECTIONS' });
+  let res;
+  try {
+    res = await chrome.runtime.sendMessage({ type: 'LIST_CONNECTIONS' });
+  } catch (e) {
+    res = null;
+  }
   connections = res && res.ok ? res.result.connections : [];
   activeId = res && res.ok ? res.result.activeConnectionId : null;
 
@@ -137,7 +147,11 @@ async function init() {
   vaultSelect.value = activeId;
 
   vaultSelect.addEventListener('change', async () => {
-    await chrome.runtime.sendMessage({ type: 'SET_ACTIVE_CONNECTION', connectionId: vaultSelect.value });
+    try {
+      await chrome.runtime.sendMessage({ type: 'SET_ACTIVE_CONNECTION', connectionId: vaultSelect.value });
+    } catch (e) {
+      // best-effort; still switch the view so the browser matches the dropdown
+    }
     selectVault(vaultSelect.value);
   });
 
@@ -199,11 +213,10 @@ captureButton.addEventListener('click', async () => {
     setStatus(`Saved to ${label} · ${savedPath}`, 'success');
 
     // Adopt the folder we just saved into (incl. any new subfolder) as the browser location.
-    path = folder ? folder.split('/') : [];
+    path = folder ? folder.split('/').filter(Boolean) : [];
     pendingNewFolder = '';
     newFolderName.value = '';
-    renderBreadcrumb();
-    renderHere();
+    loadFolder();
   } catch (error) {
     setStatus(error.message, 'error');
   } finally {
