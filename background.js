@@ -11,6 +11,9 @@ async function listInboxFilenames(apiKey) {
   if (response.status === 401) {
     throw new Error('Invalid API key — check it on the settings page');
   }
+  if (response.status === 404) {
+    return [];
+  }
   if (!response.ok) {
     throw new Error('Could not connect to Obsidian — make sure the Local REST API plugin is running');
   }
