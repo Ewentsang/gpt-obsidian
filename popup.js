@@ -170,8 +170,30 @@ async function init() {
 openOptionsButton.addEventListener('click', () => chrome.runtime.openOptionsPage());
 document.getElementById('openOptionsMain').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
+const SAVE_LABEL = '📥 Save here';
+let savedTimer = null;
+
+function setButtonWorking(text) {
+  captureButton.classList.remove('saved');
+  captureButton.textContent = text;
+}
+function setButtonSaved() {
+  captureButton.classList.add('saved');
+  captureButton.textContent = '✔ Saved';
+  if (savedTimer) clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => {
+    captureButton.classList.remove('saved');
+    captureButton.textContent = SAVE_LABEL;
+  }, 1600);
+}
+function setButtonDefault() {
+  captureButton.classList.remove('saved');
+  captureButton.textContent = SAVE_LABEL;
+}
+
 captureButton.addEventListener('click', async () => {
   captureButton.disabled = true;
+  setButtonWorking('Reading…');
   setStatus('Reading conversation…', '');
   previewEl.textContent = '';
 
@@ -196,6 +218,7 @@ captureButton.addEventListener('click', async () => {
     }
 
     previewEl.textContent = `Title: ${extractResponse.result.title}`;
+    setButtonWorking('Saving…');
     setStatus('Saving to Obsidian…', '');
 
     const saveResponse = await chrome.runtime.sendMessage({
@@ -211,15 +234,19 @@ captureButton.addEventListener('click', async () => {
 
     const { label, folder, filename } = saveResponse.result;
     const savedPath = folder ? `${folder}/${filename}` : filename;
-    setStatus(`Saved to ${label} · ${savedPath}`, 'success');
 
-    // Adopt the folder we just saved into (incl. any new subfolder) as the browser location.
+    // Adopt the folder we just saved into (incl. any new subfolder) and refresh
+    // the browser first — loadFolder clears the status, so show success AFTER it.
     path = folder ? folder.split('/').filter(Boolean) : [];
     pendingNewFolder = '';
     newFolderName.value = '';
-    loadFolder();
+    await loadFolder();
+
+    setStatus(`Saved to ${label} · ${savedPath}`, 'success');
+    setButtonSaved();
   } catch (error) {
     setStatus(error.message, 'error');
+    setButtonDefault();
   } finally {
     captureButton.disabled = false;
   }
