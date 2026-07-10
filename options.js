@@ -1,7 +1,12 @@
 const Conn = window.ChatGPTObsidianConnections;
-const listBody = document.getElementById('list');
+const listEl = document.getElementById('list');
 const statusEl = document.getElementById('status');
 const detectResult = document.getElementById('detectResult');
+const addToggle = document.getElementById('addToggle');
+const addCard = document.getElementById('addCard');
+const addLabel = document.getElementById('addLabel');
+const addPort = document.getElementById('addPort');
+const addKey = document.getElementById('addKey');
 
 let state = Conn.emptyState();
 
@@ -32,55 +37,77 @@ function flash(message) {
   setTimeout(() => { statusEl.textContent = ''; }, 2000);
 }
 
-function cell(node) {
-  const td = document.createElement('td');
-  td.appendChild(node);
-  return td;
+function makeInput(className, type, value) {
+  const el = document.createElement('input');
+  el.className = className;
+  el.type = type;
+  if (value !== undefined && value !== null) el.value = value;
+  if (type === 'password') el.autocomplete = 'off';
+  return el;
 }
 
 function render() {
-  listBody.innerHTML = '';
+  listEl.innerHTML = '';
   const multiple = state.connections.length > 1;
 
   for (const connection of state.connections) {
-    const tr = document.createElement('tr');
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const top = document.createElement('div');
+    top.className = 'card-top';
 
     // "Default" only means something with more than one connection.
-    const tdRadio = document.createElement('td');
     if (multiple) {
-      const radio = document.createElement('input');
-      radio.type = 'radio';
-      radio.name = 'active';
-      radio.checked = connection.id === state.activeConnectionId;
-      radio.addEventListener('change', async () => {
+      const dot = document.createElement('input');
+      dot.type = 'radio';
+      dot.name = 'active';
+      dot.className = 'dot-default';
+      dot.checked = connection.id === state.activeConnectionId;
+      dot.title = 'Default vault';
+      dot.addEventListener('change', async () => {
         state = Conn.setActive(state, connection.id);
         await persist();
         flash('Default vault set');
       });
-      tdRadio.appendChild(radio);
-    } else {
-      tdRadio.textContent = '—';
-      tdRadio.className = 'muted';
+      top.appendChild(dot);
     }
 
-    const labelInput = document.createElement('input');
-    labelInput.type = 'text';
-    labelInput.value = connection.label || '';
+    const labelInput = makeInput('f-label', 'text', connection.label || '');
+    labelInput.placeholder = 'Label';
+    top.appendChild(labelInput);
 
-    const portInput = document.createElement('input');
-    portInput.type = 'number';
-    portInput.value = connection.port;
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+    const testBtn = document.createElement('button');
+    testBtn.className = 'tbtn';
+    testBtn.textContent = 'Test';
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'tbtn danger';
+    removeBtn.textContent = 'Remove';
+    actions.append(testBtn, removeBtn);
+    top.appendChild(actions);
 
-    const keyInput = document.createElement('input');
-    keyInput.type = 'password';
-    keyInput.autocomplete = 'off';
-    keyInput.value = connection.apiKey || '';
+    const meta = document.createElement('div');
+    meta.className = 'card-meta';
+    const host = document.createElement('span');
+    host.className = 'host';
+    host.textContent = 'localhost:';
+    const portInput = makeInput('f-port', 'number', connection.port);
+    const sep = document.createElement('span');
+    sep.className = 'host';
+    sep.textContent = '·';
+    const keyInput = makeInput('f-key', 'password', connection.apiKey || '');
+    keyInput.placeholder = 'API key';
+    meta.append(host, portInput, sep, keyInput);
 
-    const info = document.createElement('div');
-    info.className = 'muted';
+    const result = document.createElement('div');
+    result.className = 'card-result';
+
+    card.append(top, meta, result);
+    listEl.appendChild(card);
 
     // Edits persist automatically (on blur) — no separate Save step to forget.
-    // Returns true if the row was valid and saved.
     async function saveRow(options) {
       const label = labelInput.value.trim();
       const port = parseInt(portInput.value, 10);
@@ -101,10 +128,9 @@ function render() {
     portInput.addEventListener('change', () => saveRow());
     keyInput.addEventListener('change', () => saveRow());
 
-    const testBtn = document.createElement('button');
-    testBtn.textContent = 'Test';
     testBtn.addEventListener('click', async () => {
-      info.textContent = 'Testing…';
+      result.className = 'card-result';
+      result.textContent = 'Testing…';
       const port = parseInt(portInput.value, 10);
       const apiKey = Conn.normalizeApiKey(keyInput.value);
       if (keyInput.value !== apiKey) keyInput.value = apiKey;
@@ -112,53 +138,62 @@ function render() {
       try {
         res = await chrome.runtime.sendMessage({ type: 'VERIFY_CONNECTION', port, apiKey });
       } catch (e) {
-        info.textContent = 'Test failed: ' + e.message;
+        result.className = 'card-result err';
+        result.textContent = 'Test failed: ' + e.message;
         return;
       }
-      if (!res || !res.ok) { info.textContent = (res && res.error) || 'Test failed'; return; }
-      if (!res.result.authenticated) { info.textContent = 'Reached the server, but the API key was rejected.'; return; }
-      info.textContent = res.result.sampleFolders.length
-        ? `OK — top folders: ${res.result.sampleFolders.join(', ')}`
-        : 'OK — the vault root has no sub-folders yet.';
+      if (!res || !res.ok) {
+        result.className = 'card-result err';
+        result.textContent = (res && res.error) || 'Test failed';
+        return;
+      }
+      if (!res.result.authenticated) {
+        result.className = 'card-result err';
+        result.textContent = 'Reached the server, but the API key was rejected.';
+        return;
+      }
+      result.className = 'card-result ok';
+      result.textContent = res.result.sampleFolders.length
+        ? `Connected — top folders: ${res.result.sampleFolders.join(', ')}`
+        : 'Connected — the vault root has no sub-folders yet.';
       // A verified connection should never be lost — persist it silently.
       await saveRow({ silent: true });
     });
 
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = 'Remove';
     removeBtn.addEventListener('click', async () => {
       state = Conn.removeConnection(state, connection.id);
       await persist();
       render();
       flash('Removed');
     });
-
-    const tdActions = document.createElement('td');
-    tdActions.append(testBtn, document.createTextNode(' '), removeBtn);
-
-    tr.append(tdRadio, cell(labelInput), cell(portInput), cell(keyInput), tdActions);
-    listBody.appendChild(tr);
-
-    // Test result gets its own full-width row so it never crowds the actions.
-    const infoRow = document.createElement('tr');
-    const infoTd = document.createElement('td');
-    infoTd.colSpan = 5;
-    infoTd.appendChild(info);
-    infoRow.appendChild(infoTd);
-    listBody.appendChild(infoRow);
   }
 }
 
+function clearAddFields() {
+  addLabel.value = '';
+  addPort.value = '';
+  addKey.value = '';
+}
+
+addToggle.addEventListener('click', () => {
+  addCard.classList.remove('hidden');
+  addLabel.focus();
+});
+
+document.getElementById('addCancel').addEventListener('click', () => {
+  addCard.classList.add('hidden');
+  clearAddFields();
+});
+
 document.getElementById('add').addEventListener('click', async () => {
-  const label = document.getElementById('addLabel').value.trim();
-  const port = parseInt(document.getElementById('addPort').value, 10) || Conn.DEFAULT_PORT;
-  const apiKey = Conn.normalizeApiKey(document.getElementById('addKey').value);
+  const label = addLabel.value.trim();
+  const port = parseInt(addPort.value, 10) || Conn.DEFAULT_PORT;
+  const apiKey = Conn.normalizeApiKey(addKey.value);
   if (!label || !apiKey) { flash('Label and API key are required'); return; }
   state = Conn.addConnection(state, { label, port, apiKey, lastFolder: 'inbox' });
   await persist();
-  document.getElementById('addLabel').value = '';
-  document.getElementById('addPort').value = '';
-  document.getElementById('addKey').value = '';
+  clearAddFields();
+  addCard.classList.add('hidden');
   render();
   flash('Connection added');
 });
@@ -181,10 +216,11 @@ document.getElementById('detect').addEventListener('click', async () => {
   const configured = new Set(state.connections.map((c) => c.port));
   const fresh = live.filter((p) => !configured.has(p));
   detectResult.textContent = `Found vault(s) on port(s): ${live.join(', ')}.` +
-    (fresh.length ? ` New: ${fresh.join(', ')} — port prefilled below; paste that vault's key and a label.` : ' All already configured.');
+    (fresh.length ? ` New: ${fresh.join(', ')} — prefilled below; paste that vault's key and a label.` : ' All already configured.');
   if (fresh.length) {
-    document.getElementById('addPort').value = fresh[0];
-    document.getElementById('addLabel').focus();
+    addCard.classList.remove('hidden');
+    addPort.value = fresh[0];
+    addLabel.focus();
   }
 });
 
