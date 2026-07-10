@@ -32,62 +32,82 @@ function flash(message) {
   setTimeout(() => { statusEl.textContent = ''; }, 2000);
 }
 
+function cell(node) {
+  const td = document.createElement('td');
+  td.appendChild(node);
+  return td;
+}
+
 function render() {
   listBody.innerHTML = '';
+  const multiple = state.connections.length > 1;
+
   for (const connection of state.connections) {
     const tr = document.createElement('tr');
 
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'active';
-    radio.checked = connection.id === state.activeConnectionId;
-    radio.addEventListener('change', async () => {
-      state = Conn.setActive(state, connection.id);
-      await persist();
-      flash('Default vault set');
-    });
+    // "Default" only means something with more than one connection.
     const tdRadio = document.createElement('td');
-    tdRadio.appendChild(radio);
+    if (multiple) {
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'active';
+      radio.checked = connection.id === state.activeConnectionId;
+      radio.addEventListener('change', async () => {
+        state = Conn.setActive(state, connection.id);
+        await persist();
+        flash('Default vault set');
+      });
+      tdRadio.appendChild(radio);
+    } else {
+      tdRadio.textContent = '—';
+      tdRadio.className = 'muted';
+    }
 
     const labelInput = document.createElement('input');
     labelInput.type = 'text';
     labelInput.value = connection.label || '';
-    const tdLabel = document.createElement('td');
-    tdLabel.appendChild(labelInput);
 
     const portInput = document.createElement('input');
     portInput.type = 'number';
     portInput.value = connection.port;
-    const tdPort = document.createElement('td');
-    tdPort.appendChild(portInput);
 
     const keyInput = document.createElement('input');
     keyInput.type = 'password';
-    keyInput.value = connection.apiKey || '';
     keyInput.autocomplete = 'off';
-    const tdKey = document.createElement('td');
-    tdKey.appendChild(keyInput);
+    keyInput.value = connection.apiKey || '';
 
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save';
-    saveBtn.addEventListener('click', async () => {
+    const info = document.createElement('div');
+    info.className = 'muted';
+
+    // Edits persist automatically (on blur) — no separate Save step to forget.
+    // Returns true if the row was valid and saved.
+    async function saveRow(options) {
       const label = labelInput.value.trim();
       const port = parseInt(portInput.value, 10);
-      const apiKey = keyInput.value.trim();
-      if (!label || !port || !apiKey) { flash('Label, port and key are all required'); return; }
+      const apiKey = Conn.normalizeApiKey(keyInput.value);
+      // Reflect a stripped "Bearer " prefix back into the field so the user sees it.
+      if (keyInput.value !== apiKey) keyInput.value = apiKey;
+      if (!label || !port || !apiKey) {
+        flash('Label, port and key are all required');
+        return false;
+      }
       state = Conn.updateConnection(state, connection.id, { label, port, apiKey });
       await persist();
-      flash('Saved');
-    });
+      if (!options || !options.silent) flash('Saved');
+      return true;
+    }
+
+    labelInput.addEventListener('change', () => saveRow());
+    portInput.addEventListener('change', () => saveRow());
+    keyInput.addEventListener('change', () => saveRow());
 
     const testBtn = document.createElement('button');
     testBtn.textContent = 'Test';
-    const info = document.createElement('div');
-    info.className = 'muted';
     testBtn.addEventListener('click', async () => {
       info.textContent = 'Testing…';
       const port = parseInt(portInput.value, 10);
-      const apiKey = keyInput.value.trim();
+      const apiKey = Conn.normalizeApiKey(keyInput.value);
+      if (keyInput.value !== apiKey) keyInput.value = apiKey;
       let res;
       try {
         res = await chrome.runtime.sendMessage({ type: 'VERIFY_CONNECTION', port, apiKey });
@@ -100,6 +120,8 @@ function render() {
       info.textContent = res.result.sampleFolders.length
         ? `OK — top folders: ${res.result.sampleFolders.join(', ')}`
         : 'OK — the vault root has no sub-folders yet.';
+      // A verified connection should never be lost — persist it silently.
+      await saveRow({ silent: true });
     });
 
     const removeBtn = document.createElement('button');
@@ -112,17 +134,25 @@ function render() {
     });
 
     const tdActions = document.createElement('td');
-    tdActions.append(saveBtn, document.createTextNode(' '), testBtn, document.createTextNode(' '), removeBtn, info);
+    tdActions.append(testBtn, document.createTextNode(' '), removeBtn);
 
-    tr.append(tdRadio, tdLabel, tdPort, tdKey, tdActions);
+    tr.append(tdRadio, cell(labelInput), cell(portInput), cell(keyInput), tdActions);
     listBody.appendChild(tr);
+
+    // Test result gets its own full-width row so it never crowds the actions.
+    const infoRow = document.createElement('tr');
+    const infoTd = document.createElement('td');
+    infoTd.colSpan = 5;
+    infoTd.appendChild(info);
+    infoRow.appendChild(infoTd);
+    listBody.appendChild(infoRow);
   }
 }
 
 document.getElementById('add').addEventListener('click', async () => {
   const label = document.getElementById('addLabel').value.trim();
   const port = parseInt(document.getElementById('addPort').value, 10) || Conn.DEFAULT_PORT;
-  const apiKey = document.getElementById('addKey').value.trim();
+  const apiKey = Conn.normalizeApiKey(document.getElementById('addKey').value);
   if (!label || !apiKey) { flash('Label and API key are required'); return; }
   state = Conn.addConnection(state, { label, port, apiKey, lastFolder: 'inbox' });
   await persist();

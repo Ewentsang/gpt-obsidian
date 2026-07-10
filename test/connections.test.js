@@ -84,3 +84,25 @@ test('setActive and setLastFolder update the right fields', () => {
   state = C.setLastFolder(state, 'c2', 'inbox/sub');
   assert.equal(C.getById(state, 'c2').lastFolder, 'inbox/sub');
 });
+
+test('normalizeApiKey strips a leading Bearer prefix (case-insensitive) and trims', () => {
+  assert.equal(C.normalizeApiKey('Bearer abc123'), 'abc123');
+  assert.equal(C.normalizeApiKey('bearer   abc123'), 'abc123');
+  assert.equal(C.normalizeApiKey('BEARER\tabc123'), 'abc123');
+  assert.equal(C.normalizeApiKey('  abc123  '), 'abc123');
+  assert.equal(C.normalizeApiKey('abc123'), 'abc123');
+});
+
+test('normalizeApiKey does not strip Bearer when it is not a prefix token', () => {
+  // No whitespace after "Bearer" → not the header prefix, leave it alone.
+  assert.equal(C.normalizeApiKey('Bearerabc'), 'Bearerabc');
+  // A key that merely contains the substring later is untouched.
+  assert.equal(C.normalizeApiKey('abcBearer'), 'abcBearer');
+});
+
+test('normalizeApiKey handles empty and missing input', () => {
+  assert.equal(C.normalizeApiKey(''), '');
+  assert.equal(C.normalizeApiKey('   '), '');
+  assert.equal(C.normalizeApiKey(undefined), '');
+  assert.equal(C.normalizeApiKey(null), '');
+});
