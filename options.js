@@ -167,6 +167,8 @@ function render() {
       flash('Removed');
     });
   }
+
+  refreshSuggestedPort();
 }
 
 function clearAddFields() {
@@ -198,6 +200,30 @@ document.getElementById('add').addEventListener('click', async () => {
   flash('Connection added');
 });
 
+// The lowest scan-range port that nothing is using yet — suggested to the
+// user when a vault needs its own port. `extra` = ports seen live this scan.
+// For each known HTTP port we also reserve port+1, since the plugin's HTTPS
+// server usually sits there (we can't see it over HTTP) and would collide.
+function firstFreePort(extra) {
+  const used = new Set();
+  const mark = (p) => { used.add(p); used.add(p + 1); };
+  state.connections.forEach((c) => mark(c.port));
+  (extra || []).forEach(mark);
+  for (let p = 27123; p <= 27133; p++) {
+    if (!used.has(p)) return p;
+  }
+  return null;
+}
+
+// Fill the "another vault not showing up?" recipe with a concrete port the
+// user can copy, so they don't have to pick one themselves.
+function refreshSuggestedPort(extra) {
+  const el = document.getElementById('suggestedPort');
+  if (!el) return;
+  const free = firstFreePort(extra);
+  el.textContent = free !== null ? String(free) : 'a free port (27123–27133)';
+}
+
 document.getElementById('detect').addEventListener('click', async () => {
   detectResult.textContent = 'Scanning ports 27123–27133…';
   let res;
@@ -209,18 +235,25 @@ document.getElementById('detect').addEventListener('click', async () => {
   }
   if (!res || !res.ok) { detectResult.textContent = 'Detection failed'; return; }
   const live = res.result.ports;
-  if (!live.length) {
-    detectResult.textContent = 'No running vaults found — open Obsidian and enable the Local REST API HTTP server.';
-    return;
-  }
   const configured = new Set(state.connections.map((c) => c.port));
   const fresh = live.filter((p) => !configured.has(p));
+  refreshSuggestedPort(live);
+
+  if (!live.length) {
+    detectResult.textContent = 'No running vaults found — open Obsidian and enable the Local REST API HTTP server.';
+    document.getElementById('whyDetails').open = true;
+    return;
+  }
   detectResult.textContent = `Found vault(s) on port(s): ${live.join(', ')}.` +
     (fresh.length ? ` New: ${fresh.join(', ')} — prefilled below; paste that vault's key and a label.` : ' All already configured.');
   if (fresh.length) {
     addCard.classList.remove('hidden');
     addPort.value = fresh[0];
     addLabel.focus();
+  } else {
+    // Detect found only vaults you already have. If you expected another,
+    // it's probably sharing a port — surface the fix.
+    document.getElementById('whyDetails').open = true;
   }
 });
 

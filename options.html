@@ -116,6 +116,18 @@
       .why[open] summary::before { content: "⌄ "; }
       .why p { margin: 8px 0 0; line-height: 1.65; }
       .why strong { color: var(--text); font-weight: 600; }
+      .why-steps { margin: 8px 0 0; padding-left: 20px; }
+      .why-steps li { margin: 4px 0; line-height: 1.6; }
+      .why kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px; color: var(--text);
+        background: var(--accent-soft);
+        padding: 1px 5px; border-radius: 4px;
+      }
+      #suggestedPort {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: var(--accent);
+      }
 
       /* buttons */
       button { font-family: inherit; }
@@ -272,9 +284,14 @@
           <li>In <strong>Obsidian</strong>: install the <strong>Local REST API</strong> plugin, turn on <strong>Enable Non-encrypted (HTTP) Server</strong>, and copy its <strong>API key</strong>.</li>
           <li>Back here: click <strong>Detect running vaults</strong>, then paste the key and give the vault a name.</li>
         </ol>
-        <details class="why">
-          <summary>Using more than one vault?</summary>
-          <p>Each vault runs its own server, so keep every vault you use at the same time on a <strong>different HTTP port</strong> (set it in that vault's Local REST API settings). The name is just a label for you — Obsidian's API can't report a vault's real name.</p>
+        <details class="why" id="whyDetails">
+          <summary>Another vault not showing up?</summary>
+          <p>Two vaults can't share a port, so a second vault stays invisible until it has its own. In the vault that's missing:</p>
+          <ol class="why-steps">
+            <li><strong>Settings → Local REST API → Advanced Settings</strong></li>
+            <li>Set <strong>Non-encrypted (HTTP) Server Port</strong> to <strong id="suggestedPort">27125</strong></li>
+            <li>Reload Obsidian (<kbd>Cmd/Ctrl</kbd>+<kbd>R</kbd>), then click <strong>Detect running vaults</strong> again.</li>
+          </ol>
         </details>
       </div>
       <div id="detectResult" class="note"></div>
