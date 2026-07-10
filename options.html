@@ -53,15 +53,40 @@
         letter-spacing: -0.02em;
         color: var(--text);
       }
-      .lede {
-        margin: 14px 0 0;
-        max-width: 54ch;
-        font-size: 12.5px;
-        line-height: 1.7;
-        color: var(--muted);
+      .setup { margin: 16px 0 0; max-width: 56ch; font-size: 12.5px; color: var(--muted); }
+      .setup-intro { margin: 0; line-height: 1.6; }
+      .setup ol { margin: 10px 0 0; padding: 0; list-style: none; counter-reset: step; }
+      .setup li {
+        position: relative;
+        margin: 7px 0;
+        padding-left: 26px;
+        line-height: 1.6;
+        counter-increment: step;
       }
-      .lede strong { color: var(--text); font-weight: 600; }
-      .lede em { font-style: normal; color: var(--text); }
+      .setup li::before {
+        content: counter(step);
+        position: absolute; left: 0; top: 0;
+        width: 18px; height: 18px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-soft);
+        border-radius: 50%;
+      }
+      .setup strong { color: var(--text); font-weight: 600; }
+      .why { margin-top: 12px; }
+      .why summary {
+        list-style: none;
+        cursor: pointer;
+        color: var(--accent);
+        font-size: 12.5px;
+        width: fit-content;
+      }
+      .why summary::-webkit-details-marker { display: none; }
+      .why summary::before { content: "› "; }
+      .why[open] summary::before { content: "⌄ "; }
+      .why p { margin: 8px 0 0; line-height: 1.65; }
+      .why strong { color: var(--text); font-weight: 600; }
 
       /* buttons */
       button { font-family: inherit; }
@@ -194,13 +219,17 @@
         <h1>Obsidian vaults</h1>
         <button id="detect" class="ghost">Detect running vaults</button>
       </div>
-      <p class="lede">
-        Each vault runs its own Local REST API server on its own port and API key. Add one
-        connection per vault. Vaults you keep open at the same time each need a
-        <strong>different port</strong> — set it in that vault's Local REST API settings with
-        <em>Enable Non-encrypted (HTTP) Server</em> on. Labels are yours to choose; the API
-        can't report a vault's name.
-      </p>
+      <div class="setup">
+        <p class="setup-intro">Connect a vault so this extension can save ChatGPT conversations into it. One-time setup:</p>
+        <ol>
+          <li>In <strong>Obsidian</strong>: install the <strong>Local REST API</strong> plugin, turn on <strong>Enable Non-encrypted (HTTP) Server</strong>, and copy its <strong>API key</strong>.</li>
+          <li>Back here: click <strong>Detect running vaults</strong>, then paste the key and give the vault a name.</li>
+        </ol>
+        <details class="why">
+          <summary>Using more than one vault?</summary>
+          <p>Each vault runs its own server, so keep every vault you use at the same time on a <strong>different HTTP port</strong> (set it in that vault's Local REST API settings). The name is just a label for you — Obsidian's API can't report a vault's real name.</p>
+        </details>
+      </div>
       <div id="detectResult" class="note"></div>
 
       <div id="list" class="cards"></div>
