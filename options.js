@@ -224,4 +224,38 @@ document.getElementById('detect').addEventListener('click', async () => {
   }
 });
 
-(async () => { state = await loadState(); render(); })();
+// Appearance: System / Light / Dark. "system" follows prefers-color-scheme;
+// an explicit choice wins over it (fixes environments that mis-report dark).
+const themeSeg = document.getElementById('themeSeg');
+
+function applyTheme(theme) {
+  if (theme === 'light' || theme === 'dark') {
+    document.documentElement.dataset.theme = theme;
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
+}
+
+function markTheme(theme) {
+  for (const btn of themeSeg.querySelectorAll('button')) {
+    btn.classList.toggle('active', btn.dataset.themeChoice === theme);
+  }
+}
+
+themeSeg.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-theme-choice]');
+  if (!btn) return;
+  const theme = btn.dataset.themeChoice;
+  applyTheme(theme);
+  markTheme(theme);
+  await chrome.storage.local.set({ theme });
+});
+
+(async () => {
+  const { theme } = await chrome.storage.local.get('theme');
+  const current = theme || 'system';
+  applyTheme(current);
+  markTheme(current);
+  state = await loadState();
+  render();
+})();

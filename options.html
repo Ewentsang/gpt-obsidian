@@ -16,8 +16,10 @@
         --ok: #3f7d5f;
         --danger: #b0142f;
       }
+      /* Shared dark palette, applied either by the system (when the user
+         hasn't picked a theme) or by an explicit [data-theme="dark"]. */
       @media (prefers-color-scheme: dark) {
-        :root {
+        :root:not([data-theme]) {
           --bg: #1c1c1c;
           --surface: #242424;
           --text: #d8d8d6;
@@ -30,6 +32,33 @@
           --ok: #7bbd97;
           --danger: #e0708a;
         }
+      }
+      html[data-theme="dark"] {
+        --bg: #1c1c1c;
+        --surface: #242424;
+        --text: #d8d8d6;
+        --muted: #8b8b88;
+        --faint: #63635f;
+        --line: #333331;
+        --line-strong: #40403d;
+        --accent: #a78bfa;
+        --accent-soft: rgba(167, 139, 250, 0.14);
+        --ok: #7bbd97;
+        --danger: #e0708a;
+      }
+      /* Explicit light overrides the system media query when forced. */
+      html[data-theme="light"] {
+        --bg: #fbfbfa;
+        --surface: #ffffff;
+        --text: #2e2e2e;
+        --muted: #9a9a97;
+        --faint: #bcbcb8;
+        --line: #ececeb;
+        --line-strong: #e0e0dd;
+        --accent: #7c3aed;
+        --accent-soft: rgba(124, 58, 237, 0.08);
+        --ok: #3f7d5f;
+        --danger: #b0142f;
       }
 
       * { box-sizing: border-box; }
@@ -210,6 +239,24 @@
 
       .status { margin-top: 18px; font-size: 12.5px; color: var(--accent); min-height: 16px; }
 
+      .appearance {
+        display: flex; align-items: center; gap: 12px;
+        margin-top: 40px; padding-top: 20px;
+        border-top: 1px solid var(--line);
+      }
+      .ap-label { font-size: 12.5px; color: var(--muted); }
+      .seg { display: inline-flex; gap: 2px; padding: 2px; background: var(--accent-soft); border-radius: 9px; }
+      .seg button {
+        font-family: inherit; font-size: 12px;
+        color: var(--muted);
+        background: none; border: none;
+        padding: 4px 12px; border-radius: 7px;
+        cursor: pointer;
+        transition: color 0.12s ease, background-color 0.12s ease;
+      }
+      .seg button:hover { color: var(--text); }
+      .seg button.active { color: var(--accent); background: var(--surface); box-shadow: 0 1px 2px rgba(20, 20, 20, 0.06); }
+
       .hidden { display: none !important; }
     </style>
   </head>
@@ -252,6 +299,15 @@
       </div>
 
       <div id="status" class="status"></div>
+
+      <div class="appearance">
+        <span class="ap-label">Appearance</span>
+        <div class="seg" id="themeSeg">
+          <button data-theme-choice="system">System</button>
+          <button data-theme-choice="light">Light</button>
+          <button data-theme-choice="dark">Dark</button>
+        </div>
+      </div>
     </div>
 
     <script src="lib/connections.js"></script>
