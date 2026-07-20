@@ -3,74 +3,77 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      :root {
-        --accent: #7c3aed;
-        --accent-hover: #6d28d9;
-        --accent-active: #5b21b6;
-      }
+      :root { --accent: #7c3aed; --accent-hover: #6d28d9; --accent-active: #5b21b6; }
       * { box-sizing: border-box; }
       html, body { margin: 0; }
-      html { background: #fafafa; }
-      body {
-        font-family: system-ui, -apple-system, sans-serif;
-        width: 280px;
-        padding: 16px;
-        background: #fafafa;
+      html, body { background: #fafafa; }
+      body { font-family: system-ui, -apple-system, sans-serif; width: 300px; padding: 14px; }
+      .row { display: flex; align-items: center; gap: 8px; }
+      label.lbl { font-size: 12px; font-weight: 600; color: #444; }
+      select { flex: 1; padding: 5px; border: 1px solid #d4d4d8; border-radius: 6px; font-family: inherit; font-size: 13px; }
+      .dot { width: 9px; height: 9px; border-radius: 50%; background: #bbb; flex: 0 0 auto; }
+      .dot.ok { background: #1b7a1b; }
+      .dot.bad { background: #b00020; }
+      #browser { margin-top: 10px; border: 1px solid #e5e5e5; border-radius: 8px; background: #fff; overflow: hidden; }
+      #breadcrumb { padding: 7px 9px; font-size: 12px; color: #555; border-bottom: 1px solid #eee; word-break: break-word; }
+      #breadcrumb .seg { color: var(--accent); cursor: pointer; }
+      #breadcrumb .seg:hover { text-decoration: underline; }
+      #folders { list-style: none; margin: 0; padding: 0; max-height: 190px; overflow-y: auto; }
+      #folders li { padding: 8px 10px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f2f2f2; }
+      #folders li:hover { background: #f6f1ff; }
+      #folders li.empty { color: #999; cursor: default; }
+      #folders li.empty:hover { background: transparent; }
+      .newfolder { display: flex; gap: 6px; padding: 8px 10px; border-top: 1px solid #eee; }
+      .newfolder input { flex: 1; padding: 5px; border: 1px solid #d4d4d8; border-radius: 6px; font-size: 12px; }
+      .newfolder button { border: none; background: #f1e9ff; color: var(--accent); border-radius: 6px; padding: 5px 8px; cursor: pointer; font-size: 12px; }
+      #here { margin-top: 8px; font-size: 12px; color: #333; word-break: break-word; }
+      button.primary {
+        width: 100%; margin-top: 8px; border: none; border-radius: 8px; cursor: pointer;
+        padding: 10px 12px; font-size: 14px; font-weight: 600; color: #fff; background: var(--accent);
+        font-family: inherit; transition: background-color 0.15s ease, transform 0.05s ease;
       }
-      button {
-        width: 100%;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
-      }
-      #capture {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 12px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #fff;
-        background: var(--accent);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-      }
-      #capture:hover:not(:disabled) { background: var(--accent-hover); }
-      #capture:active:not(:disabled) { background: var(--accent-active); transform: translateY(1px); }
-      #capture:disabled { background: #c4b5fd; cursor: default; }
-      #capture .icon { font-size: 15px; line-height: 1; }
-      #preview {
-        margin-top: 10px;
-        font-size: 12px;
-        color: #555;
-        word-break: break-word;
-      }
-      #status {
-        margin-top: 8px;
-        font-size: 13px;
-        line-height: 1.4;
-        white-space: pre-wrap;
-      }
+      button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+      button.primary:active:not(:disabled) { background: var(--accent-active); transform: translateY(1px); }
+      button.primary:disabled { background: #c4b5fd; cursor: default; }
+      button.primary.saved, button.primary.saved:hover { background: #1b9c5a; }
+      #preview { margin-top: 8px; font-size: 12px; color: #555; word-break: break-word; }
+      #status { margin-top: 8px; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
       #status.error { color: #b00020; }
       #status.success { color: #1b7a1b; }
-      #openOptions {
-        margin-top: 8px;
-        padding: 7px 10px;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--accent);
-        background: #f1e9ff;
-      }
-      #openOptions:hover { background: #e6d9ff; }
+      #empty { font-size: 13px; color: #444; line-height: 1.5; }
+      #openOptions, #openOptionsMain { width: 100%; margin-top: 8px; border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 500; color: var(--accent); background: #f1e9ff; cursor: pointer; }
+      .hidden { display: none; }
     </style>
   </head>
   <body>
-    <button id="capture"><span class="icon">📥</span><span>Save to Obsidian Inbox</span></button>
-    <div id="preview"></div>
-    <div id="status"></div>
-    <button id="openOptions" style="display:none;">Open Settings</button>
+    <div id="main" class="hidden">
+      <div class="row">
+        <label class="lbl" for="vault">Vault</label>
+        <select id="vault"></select>
+        <span id="dot" class="dot" title="connection status"></span>
+      </div>
+
+      <div id="browser">
+        <div id="breadcrumb"></div>
+        <ul id="folders"></ul>
+        <div class="newfolder">
+          <input id="newFolderName" type="text" placeholder="New subfolder here…" autocomplete="off" />
+          <button id="newFolderUse" type="button">Use</button>
+        </div>
+      </div>
+
+      <div id="here"></div>
+      <button id="capture" class="primary">📥 Save here</button>
+      <div id="preview"></div>
+      <div id="status"></div>
+      <button id="openOptionsMain">Open Settings</button>
+    </div>
+
+    <div id="empty" class="hidden">
+      No Obsidian vault is configured yet. Open settings to detect your vaults and add one.
+      <button id="openOptions">Open Settings</button>
+    </div>
+
     <script src="popup.js"></script>
   </body>
 </html>
