@@ -12,7 +12,11 @@ const SITE_FILES = {
 
 function filesForTab(tab) {
   if (!tab.url) return undefined;
-  return SITE_FILES[new URL(tab.url).hostname];
+  try {
+    return SITE_FILES[new URL(tab.url).hostname];
+  } catch (error) {
+    return undefined;
+  }
 }
 
 function setStatus(text, kind) {
@@ -64,7 +68,7 @@ captureButton.addEventListener('click', async () => {
     if (!extractResponse || !extractResponse.ok) {
       throw new Error(
         (extractResponse && extractResponse.error) ||
-          'Failed to read the conversation — make sure this tab is a ChatGPT conversation'
+          'Failed to read the conversation — make sure this tab is a supported conversation page'
       );
     }
 

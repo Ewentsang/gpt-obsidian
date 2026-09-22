@@ -158,7 +158,7 @@
     // reached its scroll limit), which is independent of how big each step is.
     const SCROLL_STEP_RATIO = 0.75;
 
-    for (let i = 0; i < 200; i += 1) {
+    for (let i = 0; i < Math.ceil(200 / SCROLL_STEP_RATIO); i += 1) {
       scrapeVisibleMessages(state, committedCounts, messages);
       const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 4;
       if (atBottom || container.scrollTop === lastScrollTop) break;
@@ -175,7 +175,7 @@
 
   function conversationTitle() {
     const raw = (document.title || '').trim();
-    const cleaned = raw.replace(/[-|·]\s*DeepSeek.*$/i, '').trim();
+    const cleaned = raw.replace(/[-|·]\s*DeepSeek\s*$/i, '').trim();
     return cleaned || 'untitled-conversation';
   }
 

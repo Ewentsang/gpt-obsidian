@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "ChatGPT → Obsidian Inbox",
   "version": "0.1.0",
-  "description": "Manually save the current ChatGPT conversation into your Obsidian vault's inbox/",
+  "minimum_chrome_version": "105",
+  "description": "Manually save the current ChatGPT, Doubao, or DeepSeek conversation into your Obsidian vault's inbox/",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
