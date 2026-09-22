@@ -18,13 +18,21 @@
     {
       "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
       "js": ["lib/conversation.js", "content.js"]
+    },
+    {
+      "matches": ["https://www.doubao.com/*"],
+      "js": ["lib/conversation.js", "lib/content-harness.js", "content-doubao.js"]
+    },
+    {
+      "matches": ["https://chat.deepseek.com/*"],
+      "js": ["lib/conversation.js", "lib/content-harness.js", "content-deepseek.js"]
     }
   ],
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
   },
-  "permissions": ["storage", "scripting"],
+  "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
