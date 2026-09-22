@@ -96,13 +96,18 @@
     const nodes = document.querySelectorAll('.ds-message, .ds-collapsible-text');
     for (const node of nodes) {
       if (node.classList.contains('ds-collapsible-text')) {
-        // A `.ds-collapsible-text` nested inside a `.ds-message` is part of
-        // an assistant turn's internals (e.g. the "thinking" block reuses
-        // the same class), not a top-level user bubble - skip it here so it
-        // isn't wrongly emitted as a user message. `continue` (not `return`)
-        // is correct: this is a `for...of` loop over all visible nodes, so
-        // we just move on to the next node rather than aborting the pass.
-        if (node.closest('.ds-message')) continue;
+        // A `.ds-collapsible-text` nested inside a `.ds-think-content` block
+        // is the assistant's "thinking" content reusing the same collapsible
+        // class, not a top-level user bubble - skip it here so it isn't
+        // wrongly emitted as a user message. Checking `.ds-think-content`
+        // specifically (rather than the generic `.ds-message` turn wrapper)
+        // matters because `.ds-message` wraps EVERY turn, user included -
+        // matching on it here would skip every user message, not just the
+        // nested thinking block this guard is meant to catch. `continue`
+        // (not `return`) is correct: this is a `for...of` loop over all
+        // visible nodes, so we just move on to the next node rather than
+        // aborting the pass.
+        if (node.closest('.ds-think-content')) continue;
         const text = node.innerText.trim();
         if (!text) continue;
         const key = `user\u0000${text}`;
