@@ -41,26 +41,72 @@
   // DeepSeek renders inline citation markers as `.ds-markdown-cite` spans
   // wrapped in an `<a href>`. Convert each to the same `[^n]` footnote style
   // used for ChatGPT, on a detached clone so the live page is never touched.
+  //
+  // The clone must be temporarily attached to the document (off-screen) so
+  // it gets a real layout box: `.innerText` on a node with no layout object
+  // (which includes any detached node) silently falls back to `.textContent`
+  // per spec, which would flatten paragraph/list/code-block formatting and
+  // pull in `display:none` subtree text verbatim. `position: fixed` (not
+  // `display: none` / `visibility: hidden`, both of which suppress layout)
+  // keeps a layout box while staying out of the visible viewport. The clone
+  // is always removed in `finally` so it never leaks even if something
+  // throws while resolving footnotes.
   function resolveCiteFootnotes(mainContent, state) {
     const clone = mainContent.cloneNode(true);
-    const anchors = clone.querySelectorAll('a:has(.ds-markdown-cite)');
-    for (const anchor of anchors) {
-      const url = anchor.getAttribute('href');
-      if (!url) continue;
-      anchor.textContent = formatFootnote(state, hostLabel(url), url);
+    clone.style.position = 'fixed';
+    clone.style.left = '-99999px';
+    clone.style.top = '0';
+    clone.style.pointerEvents = 'none';
+    document.body.appendChild(clone);
+    try {
+      const anchors = clone.querySelectorAll('a:has(.ds-markdown-cite)');
+      for (const anchor of anchors) {
+        const url = anchor.getAttribute('href');
+        if (!url) continue;
+        anchor.textContent = formatFootnote(state, hostLabel(url), url);
+      }
+      return clone.innerText.trim();
+    } finally {
+      clone.remove();
     }
-    return clone.innerText.trim();
   }
 
-  function scrapeVisibleMessages(state, seen, out) {
+  // `committedCounts` is a Map<string, number> shared across every call to
+  // this function (one call per scroll pass) that tracks, per dedup key, how
+  // many occurrences have actually been pushed to `out` so far across ALL
+  // passes. Content-hash dedup alone can't distinguish "the same physical
+  // message scraped again because scroll passes overlap" from "two distinct
+  // messages that legitimately have identical text and are simultaneously
+  // visible in the DOM right now" - a plain seen-before Set would wrongly
+  // drop the second case. Comparing per-pass occurrence index against the
+  // running committed count for that key handles both correctly (see the
+  // hand-traced scenarios in the task report).
+  function scrapeVisibleMessages(state, committedCounts, out) {
+    const localCounts = new Map();
+
+    function shouldCommit(key) {
+      const occurrenceIndexInThisPass = localCounts.get(key) || 0;
+      localCounts.set(key, occurrenceIndexInThisPass + 1);
+      const committedSoFar = committedCounts.get(key) || 0;
+      if (occurrenceIndexInThisPass < committedSoFar) return false;
+      committedCounts.set(key, committedSoFar + 1);
+      return true;
+    }
+
     const nodes = document.querySelectorAll('.ds-message, .ds-collapsible-text');
     for (const node of nodes) {
       if (node.classList.contains('ds-collapsible-text')) {
+        // A `.ds-collapsible-text` nested inside a `.ds-message` is part of
+        // an assistant turn's internals (e.g. the "thinking" block reuses
+        // the same class), not a top-level user bubble - skip it here so it
+        // isn't wrongly emitted as a user message. `continue` (not `return`)
+        // is correct: this is a `for...of` loop over all visible nodes, so
+        // we just move on to the next node rather than aborting the pass.
+        if (node.closest('.ds-message')) continue;
         const text = node.innerText.trim();
         if (!text) continue;
         const key = `user\u0000${text}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
+        if (!shouldCommit(key)) continue;
         out.push({ role: 'user', text });
         continue;
       }
@@ -76,8 +122,7 @@
       // footnotes, so re-scraping the same message across scroll steps never
       // assigns it a second set of footnote numbers.
       const key = `assistant\u0000${rawThink}\u0000${rawAnswer}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (!shouldCommit(key)) continue;
 
       const answer = resolveCiteFootnotes(mainContent, state);
       let text = answer;
@@ -98,16 +143,30 @@
     await loadEarliestHistory(container);
 
     const state = { nextFootnote: 1, definitions: [] };
-    const seen = new Set();
+    const committedCounts = new Map();
     const messages = [];
     let lastScrollTop = -1;
+    // Consecutive scroll positions advance by less than a full viewport so
+    // they overlap: if the virtualized list mounts/unmounts rows
+    // aggressively, a thin band of messages right at the seam between two
+    // non-overlapping viewports could otherwise never be present in the DOM
+    // at a moment this code samples it. The overlap means some messages get
+    // scraped again in the next pass, which the committedCounts-based dedup
+    // above handles correctly (re-scrapes are skipped, genuine repeats are
+    // kept). This only affects the step size, not the `atBottom` check below
+    // - that check is about loop termination (has the container already
+    // reached its scroll limit), which is independent of how big each step is.
+    const SCROLL_STEP_RATIO = 0.75;
 
     for (let i = 0; i < 200; i += 1) {
-      scrapeVisibleMessages(state, seen, messages);
+      scrapeVisibleMessages(state, committedCounts, messages);
       const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 4;
       if (atBottom || container.scrollTop === lastScrollTop) break;
       lastScrollTop = container.scrollTop;
-      container.scrollTop = Math.min(container.scrollTop + container.clientHeight, container.scrollHeight);
+      container.scrollTop = Math.min(
+        container.scrollTop + container.clientHeight * SCROLL_STEP_RATIO,
+        container.scrollHeight
+      );
       await sleep(250);
     }
 
