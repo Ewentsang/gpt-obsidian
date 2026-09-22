@@ -41,7 +41,7 @@ async function writeToInbox(apiKey, filename, content) {
   }
 }
 
-async function saveConversationToInbox({ title, source, transcript }) {
+async function saveConversationToInbox({ title, source, transcript, platform }) {
   const { localRestApiKey: apiKey } = await chrome.storage.local.get('localRestApiKey');
   if (!apiKey) {
     throw new Error('No Local REST API key set — open the extension settings page and add one first');
@@ -54,7 +54,7 @@ async function saveConversationToInbox({ title, source, transcript }) {
   const captured = todayLocalDate();
   const baseName = buildBaseName(title, captured);
   const filename = dedupeFilename(baseName, existingFilenames);
-  const content = buildInboxMarkdown({ title, source, captured, transcript });
+  const content = buildInboxMarkdown({ title, source, captured, transcript, platform });
 
   await writeToInbox(apiKey, filename, content);
   return { filename };

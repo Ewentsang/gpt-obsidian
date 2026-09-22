@@ -133,6 +133,7 @@
     return {
       title: conversationTitle(),
       source,
+      platform: '豆包',
       transcript: assembleTranscript(messages, '豆包')
     };
   }

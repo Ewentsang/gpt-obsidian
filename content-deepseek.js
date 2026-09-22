@@ -194,7 +194,7 @@
     const body = assembleTranscript(messages, 'DeepSeek');
     const transcript = definitions.length ? `${body}\n\n${definitions.join('\n')}` : body;
 
-    return { title: conversationTitle(), source, transcript };
+    return { title: conversationTitle(), source, platform: 'DeepSeek', transcript };
   }
 
   registerExtractor(extractConversation, '__deepseekObsidianExtract');
