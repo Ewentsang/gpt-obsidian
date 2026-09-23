@@ -70,6 +70,7 @@
       return {
         title: conversationTitle(conversationJson),
         source,
+        platform: 'ChatGPT',
         transcript: assembleTranscript(messages)
       };
     } catch (apiError) {
@@ -80,6 +81,7 @@
       return {
         title: conversationTitle(null),
         source,
+        platform: 'ChatGPT',
         transcript: assembleTranscript(messages)
       };
     }

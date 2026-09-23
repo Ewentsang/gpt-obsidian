@@ -3,6 +3,22 @@ const statusEl = document.getElementById('status');
 const previewEl = document.getElementById('preview');
 const openOptionsButton = document.getElementById('openOptions');
 
+const SITE_FILES = {
+  'chatgpt.com': ['lib/conversation.js', 'content.js'],
+  'chat.openai.com': ['lib/conversation.js', 'content.js'],
+  'www.doubao.com': ['lib/conversation.js', 'lib/content-harness.js', 'content-doubao.js'],
+  'chat.deepseek.com': ['lib/conversation.js', 'lib/content-harness.js', 'content-deepseek.js']
+};
+
+function filesForTab(tab) {
+  if (!tab.url) return undefined;
+  try {
+    return SITE_FILES[new URL(tab.url).hostname];
+  } catch (error) {
+    return undefined;
+  }
+}
+
 function setStatus(text, kind) {
   statusEl.textContent = text;
   statusEl.className = kind || '';
@@ -33,22 +49,26 @@ captureButton.addEventListener('click', async () => {
       // No content script listening yet — happens when the tab was already
       // open before the extension was loaded/reloaded. Inject it and retry
       // once instead of asking the user to refresh the page.
+      const files = filesForTab(tab);
+      if (!files) {
+        throw new Error('This tab is not a supported conversation page (ChatGPT, Doubao, or DeepSeek)');
+      }
       try {
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          files: ['lib/conversation.js', 'content.js']
+          files
         });
         extractResponse = await chrome.tabs.sendMessage(tab.id, {
           type: 'EXTRACT_CONVERSATION'
         });
       } catch (retryError) {
-        throw new Error('Failed to read the conversation — make sure this tab is a ChatGPT conversation');
+        throw new Error('Failed to read the conversation — make sure this tab is a supported conversation page');
       }
     }
     if (!extractResponse || !extractResponse.ok) {
       throw new Error(
         (extractResponse && extractResponse.error) ||
-          'Failed to read the conversation — make sure this tab is a ChatGPT conversation'
+          'Failed to read the conversation — make sure this tab is a supported conversation page'
       );
     }
 

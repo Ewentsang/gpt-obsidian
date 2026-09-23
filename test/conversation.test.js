@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { extractMessages, assembleTranscript, resolveCitations } = require('../lib/conversation.js');
+const { extractMessages, assembleTranscript, resolveCitations, hostLabel, formatFootnote } = require('../lib/conversation.js');
 
 const FIXTURE = {
   current_node: 'msg2-id',
@@ -231,4 +231,40 @@ test('assembleTranscript shares one footnote counter and appends definitions at 
       '[^1]: [A site](https://a.com/1)\n' +
       '[^2]: [B site](https://b.com/2)'
   );
+});
+
+test('assembleTranscript uses a custom assistant label when provided', () => {
+  const transcript = assembleTranscript(
+    [
+      { role: 'user', text: 'Hi' },
+      { role: 'assistant', text: 'Hello!' }
+    ],
+    'DeepSeek'
+  );
+  assert.equal(transcript, '**You:**\nHi\n\n**DeepSeek:**\nHello!');
+});
+
+test('assembleTranscript still defaults to the ChatGPT label when none is given', () => {
+  const transcript = assembleTranscript([
+    { role: 'user', text: 'Hi' },
+    { role: 'assistant', text: 'Hello!' }
+  ]);
+  assert.equal(transcript, '**You:**\nHi\n\n**ChatGPT:**\nHello!');
+});
+
+test('formatFootnote assigns sequential numbers and records definitions', () => {
+  const state = { nextFootnote: 1, definitions: [] };
+  const first = formatFootnote(state, 'Example', 'https://example.com');
+  const second = formatFootnote(state, 'Other', 'https://other.com');
+  assert.equal(first, '[^1]');
+  assert.equal(second, '[^2]');
+  assert.deepEqual(state.definitions, [
+    '[^1]: [Example](https://example.com)',
+    '[^2]: [Other](https://other.com)'
+  ]);
+});
+
+test('hostLabel strips protocol and a leading www.', () => {
+  assert.equal(hostLabel('https://www.example.com/path'), 'example.com');
+  assert.equal(hostLabel('https://example.org'), 'example.org');
 });

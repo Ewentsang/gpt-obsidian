@@ -2,13 +2,13 @@
 
 [中文](README.zh-CN.md)
 
-A lightweight Chrome extension that captures your ChatGPT conversations straight into your Obsidian vault — no copy-pasting, no manual formatting.
+A lightweight Chrome extension that captures your ChatGPT, Doubao, or DeepSeek conversations straight into your Obsidian vault — no copy-pasting, no manual formatting.
 
-Click the extension icon while viewing any ChatGPT conversation, and it pulls the full conversation, cleans it up, and drops it into your vault's `inbox/` folder as a properly formatted markdown file with YAML frontmatter (title, source URL, capture date, and an `inbox` tag) — ready for whatever archiving or review workflow you already use.
+Click the extension icon while viewing any ChatGPT, Doubao, or DeepSeek conversation, and it pulls the full conversation, cleans it up, and drops it into your vault's `inbox/` folder as a properly formatted markdown file with YAML frontmatter (title, source URL, capture date, and an `inbox` tag) — ready for whatever archiving or review workflow you already use.
 
-**Design philosophy:** this tool only captures and cleans. It never summarizes, rewrites, or interprets your conversations — that judgment call is left to you (or your own downstream workflow). What you see in ChatGPT is what lands in your vault, faithfully preserved, including code blocks and formatting.
+**Design philosophy:** this tool only captures and cleans. It never summarizes, rewrites, or interprets your conversations — that judgment call is left to you (or your own downstream workflow). What you see in ChatGPT, Doubao, or DeepSeek is what lands in your vault, faithfully preserved, including code blocks and formatting.
 
-**How it works:** the extension reads the conversation directly from ChatGPT's own data (not by scraping the visible page), which makes it accurate and resistant to UI redesigns — with a DOM-based fallback for the rare case that path fails. Everything happens locally: your conversation data is sent directly from your browser to your own Obsidian vault via the Local REST API community plugin, over a connection that never leaves your machine. No cloud service, no third-party server, no account required beyond your existing ChatGPT and Obsidian setup.
+**How it works:** for ChatGPT, the extension reads the conversation directly from ChatGPT's own data (not by scraping the visible page), which makes it accurate and resistant to UI redesigns — with a DOM-based fallback for the rare case that path fails. Doubao and DeepSeek don't expose a usable conversation API from the browser, so those two are captured by reading the page's own DOM directly. Everything happens locally: your conversation data is sent directly from your browser to your own Obsidian vault via the Local REST API community plugin, over a connection that never leaves your machine. No cloud service, no third-party server, no account required beyond your existing chat and Obsidian setup.
 
 ## Features
 
@@ -22,7 +22,7 @@ Click the extension icon while viewing any ChatGPT conversation, and it pulls th
 
 - Google Chrome
 - Obsidian with the **Local REST API** community plugin installed and enabled
-- An active ChatGPT account
+- An active account on whichever of ChatGPT, Doubao, or DeepSeek you want to capture from
 
 ## Setup (one-time)
 
@@ -34,12 +34,12 @@ Click the extension icon while viewing any ChatGPT conversation, and it pulls th
 
 ## Usage
 
-1. Open a conversation on `chatgpt.com` or `chat.openai.com` (the URL should look like `.../c/<some-id>`).
+1. Open a conversation on `chatgpt.com`/`chat.openai.com` (`.../c/<some-id>`), `www.doubao.com` (`.../chat/<some-id>`), or `chat.deepseek.com` (`.../a/chat/s/<some-id>`).
 2. Click the extension's toolbar icon.
 3. Click **"Save to Obsidian Inbox"**.
 4. The popup shows the conversation title, then a success message once the file is saved to your vault's `inbox/` folder.
 
-If you see an error, the popup message tells you what's wrong (Obsidian unreachable, invalid API key, or the current tab isn't a ChatGPT conversation) — the "Open Settings" button appears when the fix involves the API key.
+If you see an error, the popup message tells you what's wrong (Obsidian unreachable, invalid API key, or the current tab isn't a supported conversation page) — the "Open Settings" button appears when the fix involves the API key.
 
 ## Development
 

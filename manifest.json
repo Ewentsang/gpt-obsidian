@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "ChatGPT → Obsidian Inbox",
   "version": "0.1.0",
-  "description": "Manually save the current ChatGPT conversation into your Obsidian vault's inbox/",
+  "minimum_chrome_version": "105",
+  "description": "Manually save the current ChatGPT, Doubao, or DeepSeek conversation into your Obsidian vault's inbox/",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -18,13 +19,21 @@
     {
       "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
       "js": ["lib/conversation.js", "content.js"]
+    },
+    {
+      "matches": ["https://www.doubao.com/*"],
+      "js": ["lib/conversation.js", "lib/content-harness.js", "content-doubao.js"]
+    },
+    {
+      "matches": ["https://chat.deepseek.com/*"],
+      "js": ["lib/conversation.js", "lib/content-harness.js", "content-deepseek.js"]
     }
   ],
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
   },
-  "permissions": ["storage", "scripting"],
+  "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
